@@ -12,6 +12,9 @@ use ::smallvec::SmallVec;
 use self::attribute::*;
 use crate::block::chunk::{TileCoordinates, CompressedBlock};
 use crate::error::*;
+#[cfg(target_env = "sgx")]
+use std::untrusted::fs::File;
+#[cfg(not(target_env = "sgx"))]
 use std::fs::File;
 use std::io::{BufReader};
 use crate::math::*;

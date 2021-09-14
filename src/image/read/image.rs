@@ -72,6 +72,9 @@ impl<F, L> ReadImage<F, L> where F: FnMut(f64)
     pub fn from_file<Layers>(self, path: impl AsRef<Path>) -> Result<Image<Layers>>
         where for<'s> L: ReadLayers<'s, Layers = Layers>
     {
+        #[cfg(target_env = "sgx")]
+        return self.from_unbuffered(std::untrusted::fs::File::open(path)?);
+        #[cfg(not(target_env = "sgx"))]
         self.from_unbuffered(std::fs::File::open(path)?)
     }
 

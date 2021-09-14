@@ -11,6 +11,9 @@ use ::half::f16;
 use crate::error::{Error, Result, UnitResult, IoResult};
 use std::io::{Seek, SeekFrom};
 use std::path::Path;
+#[cfg(target_env = "sgx")]
+use std::untrusted::fs::File;
+#[cfg(not(target_env = "sgx"))]
 use std::fs::File;
 use std::convert::TryFrom;
 
@@ -43,6 +46,9 @@ pub fn skip_bytes(read: &mut impl Read, count: usize) -> IoResult<()> {
 pub fn attempt_delete_file_on_write_error<'p>(path: &'p Path, write: impl FnOnce(LateFile<'p>) -> UnitResult) -> UnitResult {
     match write(LateFile::from(path)) {
         Err(error) => { // FIXME deletes existing file if creation of new file fails?
+            #[cfg(target_env = "sgx")]
+            let _deleted = std::untrusted::fs::remove_file(path); // ignore deletion errors
+            #[cfg(not(target_env = "sgx"))]
             let _deleted = std::fs::remove_file(path); // ignore deletion errors
             Err(error)
         },
